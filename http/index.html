@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Simple client</title>
+    <style>
+        .green {
+            color: #a6e22e;
+        }
+
+        .red {
+            color: #f92672;
+        }
+
+        .pink {
+            color: #ae81ff;
+        }
+
+        .yellow {
+            color: #800000;
+        }
+
+        .comment {
+            color: #75715e;
+        }
+
+        .box {
+            background: #f5f5f5;
+            color: #333;
+            padding: 5px;
+            margin: 3px;
+            line-height: 1.5;
+        }
+
+        td {
+            color: #333;
+        }
+    </style>
+    <script type="text/javascript">
+        var ws;
+
+        function init(ip, port) {
+            var status = document.getElementById('status');
+            // Connect to Web Socket
+            ws = new WebSocket("ws://" + ip + ":" + port + "/");
+            // Set event handlers.
+            ws.onopen = function () {
+                output("onopen");
+                status.innerHTML = '链接成功'
+            };
+
+            ws.onmessage = function (e) {
+                // e.data contains received string.
+                var obj = {}
+                var start = 0
+                var end = e.data.indexOf(':')
+                obj.level = e.data.substring(start, end)
+                start = end + 1
+                end = e.data.indexOf('[')
+                obj.date = e.data.substring(start, end)
+                start = end + 1
+                end = e.data.indexOf(']')
+                obj.file = e.data.substring(start, end)
+                start = end + 2
+                end = start + e.data.substring(start).indexOf(' ')
+                obj.error = e.data.substring(start, end)
+                start = end + 1
+                end = start + e.data.substring(start).indexOf(' ')
+                obj.logId = e.data.substring(start, end)
+                start = end + 1
+                end = start + e.data.substring(start).indexOf(' ')
+                obj.uri = e.data.substring(start, end)
+                start = end + 1
+                end = start + e.data.substring(start).indexOf(' ')
+                obj.ip = e.data.substring(start, end)
+                start = end + 1
+                end = start + e.data.substring(start).indexOf(' ')
+                obj.refer = e.data.substring(start, end)
+                start = end + 1
+                end = start + e.data.substring(start).indexOf(']') + 1
+                obj.cookie = e.data.substring(start, end)
+                start = end + 1
+                end = start + e.data.substring(start).indexOf(' ')
+                obj.info = e.data.substring(start)
+                outlog(obj)
+                // output("onmessage: " + e.data);
+            };
+
+            ws.onclose = function () {
+                status.innerHTML = '已断开'
+                output("onclose");
+            };
+
+            ws.onerror = function (e) {
+                console.log(e)
+            };
+
+        }
+
+        function onSubmit() {
+            var ip = document.getElementById("ip");
+            var port = document.getElementById("port");
+            // You can send message to the Web Socket using ws.send.
+            init(ip.value, port.value)
+            return false;
+        }
+
+        function onCloseClick() {
+            ws.close();
+            clear();
+        }
+
+        function clear() {
+            var log = document.getElementById("log");
+            log.innerHTML = '';
+        }
+
+        function output(str) {
+            var log = document.getElementById("log");
+            var escaped = str.replace(/&/, "&amp;").replace(/</, "&lt;").replace(/>/, "&gt;").replace(/"/, "&quot;"); // "
+            log.innerHTML = escaped + "<br>" + log.innerHTML;
+        }
+
+        function trans(str) {
+            return str.replace(/&/, "&amp;").replace(/</, "&lt;").replace(/>/, "&gt;").replace(/"/, "&quot;")
+        }
+
+        function outlog(obj) {
+            var log = document.getElementById("log");
+            var html = '<div class="box"><table><tr><td class="yellow">level:</td><td class="red">' + trans(obj.level) + '</td></tr><tr><td class="yellow">time:</td><td class="pink">' + trans(obj.date) + '</td></tr><tr><td class="yellow">file:</td><td>' + trans(obj.file) + '</td></tr><tr><td class="yellow">error:</td><td class="green">' + trans(obj.error) + '</td></tr><tr><td class="yellow">logid:</td><td class="green">' + trans(obj.logId) + '</td></tr><tr><td class="yellow">uri:</td><td>' + trans(obj.uri) + '</td></tr><tr><td class="yellow">ip:</td><td class="green">' + trans(obj.ip) + '</td></tr><tr><td class="yellow">refer:</td><td class="red">' + trans(obj.refer) + '</td></tr><tr><td class="yellow">cookie:</td><td>' + trans(obj.cookie) + '</td></tr><tr><td class="yellow">info:</td><td class="red">' + trans(obj.info) + '</td></tr></table></div>'
+            log.innerHTML = html + "<br>" + log.innerHTML;
+        }
+
+    </script>
+</head>
+<body onload="">
+<form action="" onsubmit="return false">
+    <label for="ip">ip : </label>
+    <input type="text" name="ip" id="ip">
+    <label for="port">port : </label>
+    <input type="text" name="port" id="port">
+    <input type="submit" value="链接" onclick="onSubmit()">
+    <button onclick="onCloseClick()">断开</button>
+    <span id="status">未连接</span>
+</form>
+<div id="log">
+</div>
+</body>
+</html>

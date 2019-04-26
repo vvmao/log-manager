@@ -32,7 +32,7 @@ from threading import Thread
 class Tail(object):
     """ Represents a tail command. """
 
-    def __init__(self, tailed_file):
+    def __init__(self, tailed_file, server):
         """ Initiate a Tail instance.
             Check for file validity, assigns callback function to standard out.
 
@@ -100,7 +100,7 @@ class Tail(object):
             self.ws.send_message(client, x)
 
     def websocket_server(self, port):
-        self.ws = WebsocketServer(port, "0.0.0.0");
+        self.ws = WebsocketServer(port, "0.0.0.0")
         self.ws.set_fn_new_client(self.new_client)
         t = Thread(target=self.ws.run_forever)
         t.setDaemon(True)
